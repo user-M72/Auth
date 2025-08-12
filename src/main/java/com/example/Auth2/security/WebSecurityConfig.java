@@ -3,15 +3,19 @@ package com.example.Auth2.security;
 import com.example.Auth2.service.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+@Configuration
+@EnableWebSecurity
 public class WebSecurityConfig {
     @Autowired
     CustomUserDetailsService userDetailsService;
@@ -33,7 +37,7 @@ public class WebSecurityConfig {
     }
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        // Updated configuration for Spring Security 6.x
+
         http
                 .csrf(csrf -> csrf.disable()) // Disable CSRF
                 .cors(cors -> cors.disable()) // Disable CORS (or configure if needed)
@@ -45,10 +49,10 @@ public class WebSecurityConfig {
                 )
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/api/auth/**", "/api/test/all").permitAll() // Use 'requestMatchers' instead of 'antMatchers'
+                                .requestMatchers("/api/auth/**", "/api/test/v1/all", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll() // Use 'requestMatchers' instead of 'antMatchers'
                                 .anyRequest().authenticated()
                 );
-        // Add the JWT Token filter before the UsernamePasswordAuthenticationFilter
+
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

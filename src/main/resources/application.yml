@@ -21,3 +21,5 @@ spring:
 jwt:
   secret: thisIsMysecregtfrdesww233eggtffeeddgkjjhhtdhttebd54ndhdhfhhhshs8877465sbbdd
   expiration: 3600000
+server:
+  port: 0
