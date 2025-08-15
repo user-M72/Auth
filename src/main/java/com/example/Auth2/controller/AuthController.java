@@ -23,7 +23,7 @@ public class AuthController {
     @Autowired PasswordEncoder encoder;
     @Autowired JwtUtil jwtUtils;
 
-    @PostMapping("/signin")
+    @PostMapping("/signing")
     public String authenticateUser(@RequestBody User user) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -40,12 +40,16 @@ public class AuthController {
         if (userRepository.existsByUsername(user.getUsername())) {
             return "Error: Username is already taken!";
         }
-        // Create new user's account
-        User newUser = new User(
-                null,
-                user.getUsername(),
-                encoder.encode(user.getPassword())
-        );
+        if (userRepository.existsByEmail(user.getEmail())) {
+            return "Error: Email is already registered!";
+        }
+
+        User newUser = User.builder()
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .password(encoder.encode(user.getPassword()))
+                .build();
+
         userRepository.save(newUser);
         return "User registered successfully!";
     }

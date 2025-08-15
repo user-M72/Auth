@@ -1,18 +1,54 @@
 spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${google_clientId}
+            client-secret: ${google_clientSecret}
+            scope:
+              - email
+              - profile
+
+          github:
+            client-id: ${github_clientId}
+            client-secret: ${github_clientSecret}
+            scope:
+              - read:user
+              - user:email
+
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+
+          github:
+            authorization-uri: https://github.com/login/oauth/authorize
+            token-uri: https://github.com/login/oauth/access_token
+            user-info-uri: https://api.github.com/user
+
   application:
     name: Auth2
 
   datasource:
-    url: jdbc:h2:mem:testdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    url: jdbc:postgresql://localhost:5432/authDb
+    username: postgres
+    password: 01032002ama
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      minimum-idle: 0
+      maximum-pool-size: 10
+      idle-timeout: 30000
+      pool-name: HikariPool
 
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
-    show-sql: true
     hibernate:
+      # PAY ATTENTION, BE CAUTIOUS!!!
       ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
   h2:
     console:
@@ -22,4 +58,4 @@ jwt:
   secret: thisIsMysecregtfrdesww233eggtffeeddgkjjhhtdhttebd54ndhdhfhhhshs8877465sbbdd
   expiration: 3600000
 server:
-  port: 0
+  port: 8080

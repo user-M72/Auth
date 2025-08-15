@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Вход</title>
+  <style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f5f7fa;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+    .container {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        text-align: center;
+        width: 300px;
+    }
+    h1 {
+        margin-bottom: 20px;
+        font-size: 22px;
+    }
+    .btn {
+        display: block;
+        padding: 10px;
+        margin: 10px 0;
+        text-decoration: none;
+        color: white;
+        border-radius: 6px;
+        font-weight: bold;
+    }
+    .google {
+        background: #db4437;
+    }
+    .github {
+        background: #333;
+    }
+    .btn:hover {
+        opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Войти через</h1>
+  <a href="/oauth2/authorization/google" class="btn google">Google</a>
+  <a href="/oauth2/authorization/github" class="btn github">GitHub</a>
+</div>
+</body>
+</html>

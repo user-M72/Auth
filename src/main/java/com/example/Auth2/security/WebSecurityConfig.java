@@ -1,6 +1,8 @@
 package com.example.Auth2.security;
 
+import com.example.Auth2.service.CustomOAuth2SuccessHandler;
 import com.example.Auth2.service.CustomUserDetailsService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,45 +18,56 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor // чтобы через final поля заинжектить
 public class WebSecurityConfig {
-    @Autowired
-    CustomUserDetailsService userDetailsService;
-    @Autowired
-    private AuthEntryPointJwt unauthorizedHandler;
+
+    private final CustomUserDetailsService userDetailsService;
+    private final AuthEntryPointJwt unauthorizedHandler;
+    private final CustomOAuth2SuccessHandler customOAuth2SuccessHandler;
+
     @Bean
     public AuthTokenFilter authenticationJwtTokenFilter() {
         return new AuthTokenFilter();
     }
+
     @Bean
-    public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration authenticationConfiguration
-    ) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
     }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
         http
-                .csrf(csrf -> csrf.disable()) // Disable CSRF
-                .cors(cors -> cors.disable()) // Disable CORS (or configure if needed)
-                .exceptionHandling(exceptionHandling ->
-                        exceptionHandling.authenticationEntryPoint(unauthorizedHandler)
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.disable())
+                .exceptionHandling(exceptionHandling -> exceptionHandling.authenticationEntryPoint(unauthorizedHandler))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/api/auth/**",
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/oauth2/**",
+                                "/loginPage",
+                                "/home",
+                                "/login",
+                                "/user"
+                        ).permitAll()
+                        .anyRequest().authenticated()
                 )
-                .sessionManagement(sessionManagement ->
-                        sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                .authorizeHttpRequests(authorizeRequests ->
-                        authorizeRequests
-                                .requestMatchers("/api/auth/**", "/api/test/v1/all", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll() // Use 'requestMatchers' instead of 'antMatchers'
-                                .anyRequest().authenticated()
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/login")
+                        .successHandler(customOAuth2SuccessHandler)
                 );
 
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
-
 }

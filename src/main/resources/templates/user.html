@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Профиль</title>
+</head>
+<body>
+<h1>Привет, <span id="name">Имя</span>!</h1>
+<p>Email: <span id="email">email@example.com</span></p>
+<p>sub: <span id="sub">sub</span></p>
+<img id="picture" alt="Фото профиля" width="100" />
+<br><br>
+<button onclick="logout()">Выйти</button>
+
+<script>
+    const secretKey = 'jwtToken';
+
+    // Получаем все параметры из URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    const name = urlParams.get('name');
+    const email = urlParams.get('email');
+    const sub = urlParams.get('sub');
+    const picture = urlParams.get('picture');
+
+    // Сохраняем токен в localStorage
+    if (token) {
+        localStorage.setItem(secretKey, token);
+    }
+
+    // Подставляем данные на странице
+    if (name) document.getElementById('name').textContent = name;
+    if (email) document.getElementById('email').textContent = email;
+    if (sub) document.getElementById('sub').textContent = sub;
+    if (picture) document.getElementById('picture').src = decodeURIComponent(picture);
+
+    function logout() {
+        localStorage.removeItem(secretKey);
+        window.location.href = '/loginPage';
+    }
+</script>
+</body>
+</html>

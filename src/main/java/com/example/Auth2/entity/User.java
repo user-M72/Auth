@@ -2,6 +2,7 @@ package com.example.Auth2.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import jakarta.persistence.Id;
 
 @Entity
 @Table(name = "users")
@@ -9,6 +10,7 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class User {
 
     @Id
@@ -16,6 +18,11 @@ public class User {
     private Long id;
 
     @Column(unique = true)
-    private String username;
-    private String password;
+    private String username; // Можно хранить Google name или свой логин
+
+    @Column(unique = true, nullable = false)
+    private String email;
+
+    private String password; // при OAuth можно оставлять null
+
 }
