@@ -47,8 +47,20 @@ public class OAuth2Controller {
         return "login";
     }
 
-    @PostMapping("/login")
-    public String showLogin(){
-        return null;
+    @GetMapping("/profile")
+    public String profilePage(Model model, Authentication authentication) {
+        org.springframework.security.core.userdetails.User principal =
+                (org.springframework.security.core.userdetails.User) authentication.getPrincipal();
+
+        String usernameOrEmail = principal.getUsername();
+
+
+        User user = userRepository.findByUsernameOrEmail(usernameOrEmail)
+                .orElseThrow();
+
+        model.addAttribute("name", user.getUsername());
+        model.addAttribute("email", user.getEmail());
+
+        return "profile";
     }
 }
