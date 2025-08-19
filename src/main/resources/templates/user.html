@@ -15,7 +15,7 @@
 <script>
     const secretKey = 'jwtToken';
 
-    // Получаем все параметры из URL
+
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
     const name = urlParams.get('name');
@@ -23,12 +23,12 @@
     const sub = urlParams.get('sub');
     const picture = urlParams.get('picture');
 
-    // Сохраняем токен в localStorage
+
     if (token) {
         localStorage.setItem(secretKey, token);
     }
 
-    // Подставляем данные на странице
+
     if (name) document.getElementById('name').textContent = name;
     if (email) document.getElementById('email').textContent = email;
     if (sub) document.getElementById('sub').textContent = sub;
@@ -36,7 +36,7 @@
 
     function logout() {
         localStorage.removeItem(secretKey);
-        window.location.href = '/loginPage';
+        window.location.href = '/login';
     }
 </script>
 </body>

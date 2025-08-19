@@ -43,13 +43,87 @@
     .btn:hover {
         opacity: 0.9;
     }
+    .form-group {
+        margin-bottom: 15px;
+        text-align: left;
+    }
+    input {
+        width: 100%;
+        padding: 8px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+    }
+    button {
+        width: 100%;
+        padding: 10px;
+        border: none;
+        border-radius: 6px;
+        background: #007bff;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    button:hover {
+        opacity: 0.9;
+    }
+    .divider {
+        margin: 20px 0;
+        font-size: 14px;
+        color: #666;
+        position: relative;
+    }
+    .divider::before, .divider::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        width: 40%;
+        height: 1px;
+        background: #ccc;
+    }
+    .divider::before {
+        left: 0;
+    }
+    .divider::after {
+        right: 0;
+    }
+    .register-link {
+        margin-top: 15px;
+        font-size: 14px;
+    }
+    .register-link a {
+        color: #007bff;
+        text-decoration: none;
+        font-weight: bold;
+    }
   </style>
 </head>
 <body>
 <div class="container">
-  <h1>Войти через</h1>
+  <h1>Вход</h1>
+
+  <!-- Форма для логина/пароля -->
+  <form method="post" action="/login">
+    <div class="form-group">
+      <label for="username">Логин</label>
+      <input type="text" id="username" name="username" required>
+    </div>
+    <div class="form-group">
+      <label for="password">Пароль</label>
+      <input type="password" id="password" name="password" required>
+    </div>
+    <button type="submit">Войти</button>
+  </form>
+
+  <div class="divider">или</div>
+
+  <!-- OAuth2 кнопки -->
   <a href="/oauth2/authorization/google" class="btn google">Google</a>
   <a href="/oauth2/authorization/github" class="btn github">GitHub</a>
+
+  <!-- Ссылка на регистрацию -->
+  <div class="register-link">
+    Нет аккаунта? <a href="/register">Зарегистрироваться</a>
+  </div>
 </div>
 </body>
 </html>

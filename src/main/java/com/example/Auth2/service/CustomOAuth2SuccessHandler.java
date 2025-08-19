@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -33,15 +34,24 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
         String picture = oAuth2User.getAttribute("picture");
 
 
+        String finalEmail = email;
+        String finalName = name;
+
         userRepository.findByEmail(email).orElseGet(() -> {
             User newUser = User.builder()
-                    .username(name)
-                    .email(email)
+                    .username(finalName)
+                    .email(finalEmail)
                     .password(null)
                     .build();
             return userRepository.save(newUser);
         });
 
+        if (authentication.getPrincipal() instanceof UserDetails userDetails){
+            email = userDetails.getUsername();
+            User dbUser = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+            name = dbUser.getUsername();
+
+        }
 
         String token = jwtUtil.generateToken(email);
 

@@ -57,9 +57,17 @@ public class WebSecurityConfig {
                                 "/loginPage",
                                 "/home",
                                 "/login",
-                                "/user"
+                                "/user",
+                                "/register",
+                                "/register/**"
                         ).permitAll()
                         .anyRequest().authenticated()
+                )
+                .formLogin(form -> form
+                        .loginPage("/login")                 // GET -> твоя страница login.html
+                        .loginProcessingUrl("/login")        // POST -> обрабатывает Spring Security
+                        .defaultSuccessUrl("/user", true)    // после успешного входа
+                        .permitAll()
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login")

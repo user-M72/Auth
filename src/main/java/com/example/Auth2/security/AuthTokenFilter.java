@@ -29,6 +29,13 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
+
+        String path = request.getServletPath();
+        if (path.equals("/register") || path.equals("/login") || path.equals("/home")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         try {
             String jwt = parseJwt(request); // читает header Authorization
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
