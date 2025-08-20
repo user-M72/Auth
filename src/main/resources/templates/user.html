@@ -7,7 +7,14 @@
 <body>
 <h1>Привет, <span id="name">Имя</span>!</h1>
 <p>Email: <span id="email">email@example.com</span></p>
-<p>sub: <span id="sub">sub</span></p>
+
+<!-- Google -->
+<p id="subField" style="display:none;">Google sub: <span id="sub"></span></p>
+
+<!-- GitHub -->
+<p id="idField" style="display:none;">GitHub ID: <span id="id"></span></p>
+<p id="loginField" style="display:none;">GitHub Login: <span id="login"></span></p>
+
 <img id="picture" alt="Фото профиля" width="100" />
 <br><br>
 <button onclick="logout()">Выйти</button>
@@ -15,25 +22,49 @@
 <script>
     const secretKey = 'jwtToken';
 
-
+    // --- получаем параметры из URL ---
     const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
-    const name = urlParams.get('name');
-    const email = urlParams.get('email');
-    const sub = urlParams.get('sub');
-    const picture = urlParams.get('picture');
+    const token   = urlParams.get('token');
+    const name    = urlParams.get('name');
+    const email   = urlParams.get('email');
+    const sub     = urlParams.get('sub');       // Google
+    const picture = urlParams.get('picture');   // Google
+    const login   = urlParams.get('login');     // GitHub
+    const id      = urlParams.get('id');        // GitHub
+    const avatar  = urlParams.get('avatar');    // GitHub
 
-
+    // --- сохраняем токен ---
     if (token) {
         localStorage.setItem(secretKey, token);
     }
 
-
-    if (name) document.getElementById('name').textContent = name;
+    // --- выводим данные ---
+    if (name)  document.getElementById('name').textContent = name;
     if (email) document.getElementById('email').textContent = email;
-    if (sub) document.getElementById('sub').textContent = sub;
-    if (picture) document.getElementById('picture').src = decodeURIComponent(picture);
 
+    if (sub) {
+        document.getElementById('subField').style.display = "block";
+        document.getElementById('sub').textContent = sub;
+    }
+
+    if (id) {
+        document.getElementById('idField').style.display = "block";
+        document.getElementById('id').textContent = id;
+    }
+
+    if (login) {
+        document.getElementById('loginField').style.display = "block";
+        document.getElementById('login').textContent = login;
+    }
+
+    // --- аватар Google или GitHub ---
+    if (picture) {
+        document.getElementById('picture').src = decodeURIComponent(picture);
+    } else if (avatar) {
+        document.getElementById('picture').src = decodeURIComponent(avatar);
+    }
+
+    // --- logout ---
     function logout() {
         localStorage.removeItem(secretKey);
         window.location.href = '/login';

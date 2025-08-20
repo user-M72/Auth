@@ -7,7 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -28,39 +28,65 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
                                         Authentication authentication) throws IOException {
 
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
-        String email = oAuth2User.getAttribute("email");
-        String name = oAuth2User.getAttribute("name");
-        String sub = oAuth2User.getAttribute("sub");
-        String picture = oAuth2User.getAttribute("picture");
+        String registrationId = ((OAuth2AuthenticationToken) authentication).getAuthorizedClientRegistrationId();
 
+        String email = null;
+        String name = null;
+        String picture = null;
+        String sub = null;
+        String login = null;
+        String id = null;
+        String avatar = null;
 
-        String finalEmail = email;
-        String finalName = name;
+        if ("google".equals(registrationId)) {
+            // -------- GOOGLE --------
+            email = oAuth2User.getAttribute("email");
+            name = oAuth2User.getAttribute("name");
+            sub = oAuth2User.getAttribute("sub");
+            picture = oAuth2User.getAttribute("picture");
 
-        userRepository.findByEmail(email).orElseGet(() -> {
-            User newUser = User.builder()
-                    .username(finalName)
-                    .email(finalEmail)
-                    .password(null)
-                    .build();
-            return userRepository.save(newUser);
-        });
+        } else if ("github".equals(registrationId)) {
+            // -------- GITHUB --------
 
-        if (authentication.getPrincipal() instanceof UserDetails userDetails){
-            email = userDetails.getUsername();
-            User dbUser = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
-            name = dbUser.getUsername();
+            login = oAuth2User.getAttribute("login");
+            avatar = oAuth2User.getAttribute("avatar_url");
+            email = oAuth2User.getAttribute("email"); // может быть null
+            name = oAuth2User.getAttribute("name");
 
+            if (name == null) {
+                name = login; // если name пустой, используем login
+            }
         }
 
-        String token = jwtUtil.generateToken(email);
+        // --- сохраняем пользователя в БД ---
+        final String finalEmail = email;
+        final String finalName = name;
 
+        if (finalEmail != null) {
+            userRepository.findByEmail(finalEmail).orElseGet(() -> {
+                User newUser = User.builder()
+                        .username(finalName)
+                        .email(finalEmail)
+                        .password(null)
+                        .build();
+                return userRepository.save(newUser);
+            });
+        }
 
-        response.sendRedirect("/user?token=" + token
-                +"&name="+name
-                +"&email="
-                +email+"&sub="
-                +sub+"&picture="
-                +URLEncoder.encode(picture, "UTF-8"));
+        // --- генерируем токен ---
+        String token = jwtUtil.generateToken(email != null ? email : (login != null ? login : "guest"));
+
+        // --- редиректим с параметрами ---
+        String redirectUrl = "/user?token=" + token
+                + "&name=" + (name != null ? name : "")
+                + "&email=" + (email != null ? email : "")
+                + "&sub=" + (sub != null ? sub : "")
+                + "&picture=" + (picture != null ? URLEncoder.encode(picture, "UTF-8") : "")
+                + "&login=" + (login != null ? login : "")
+                + "&avatar=" + (avatar != null ? URLEncoder.encode(avatar, "UTF-8") : "");
+
+        response.sendRedirect(redirectUrl);
     }
+
+
 }
