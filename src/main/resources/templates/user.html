@@ -17,7 +17,10 @@
 
 <img id="picture" alt="Фото профиля" width="100" />
 <br><br>
-<button onclick="logout()">Выйти</button>
+
+<!-- кнопки -->
+<button onclick="goToChat()">💬 Чат</button>
+<button onclick="logout()">🚪 Выйти</button>
 
 <script>
     const secretKey = 'jwtToken';
@@ -62,6 +65,11 @@
         document.getElementById('picture').src = decodeURIComponent(picture);
     } else if (avatar) {
         document.getElementById('picture').src = decodeURIComponent(avatar);
+    }
+
+    // --- кнопка чат ---
+    function goToChat() {
+        window.location.href = '/chat';
     }
 
     // --- logout ---

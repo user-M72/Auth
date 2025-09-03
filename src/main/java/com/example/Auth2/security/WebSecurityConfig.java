@@ -59,7 +59,8 @@ public class WebSecurityConfig {
                                 "/login",
                                 "/user",
                                 "/register",
-                                "/register/**"
+                                "/register/**",
+                                "/ws/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

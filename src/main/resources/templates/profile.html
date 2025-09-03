@@ -8,6 +8,12 @@
 <h1>Привет, <span th:text="${name}"></span>!</h1>
 <p>Email: <span th:text="${email}"></span></p>
 
+<!-- кнопка перехода в чат -->
+<form th:action="@{/chat}" method="get">
+  <button type="submit">Перейти в чат</button>
+</form>
+
+<!-- кнопка выхода -->
 <form th:action="@{/logout}" method="post">
   <button type="submit">Выйти</button>
 </form>

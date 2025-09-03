@@ -31,7 +31,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
 
         String path = request.getServletPath();
-        if (path.equals("/register") || path.equals("/login") || path.equals("/home")) {
+        if (path.equals("/register") || path.equals("/login") || path.equals("/home") || path.equals("ws")) {
             filterChain.doFilter(request, response);
             return;
         }
