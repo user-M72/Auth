@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>WebSocket Chat</title>
+  <script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: #e5ddd5;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .app {
+      display: flex;
+      width: 900px;
+      height: 650px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      background: #fff;
+    }
+    /* Левая колонка */
+    .sidebar {
+      width: 280px;
+      background: #f7f7f7;
+      border-right: 1px solid #ddd;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-header {
+      background: #0088cc;
+      color: white;
+      padding: 15px;
+      font-weight: bold;
+      text-align: center;
+    }
+    .chat-list {
+      flex: 1;
+      overflow-y: auto;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .chat-list li {
+      padding: 12px 15px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+      transition: background 0.2s;
+    }
+    .chat-list li:hover {
+      background: #e9f5fc;
+    }
+    .chat-list li.active {
+      background: #d0ebff;
+      font-weight: bold;
+    }
+    /* Правая колонка */
+    .chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .chat-header {
+      background: #0088cc;
+      color: white;
+      padding: 15px;
+      font-weight: bold;
+    }
+    .chat-messages {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      background: #e5ddd5;
+      display: flex;
+      flex-direction: column;
+    }
+    .chat-messages li {
+      display: inline-block;
+      margin-bottom: 12px;
+      padding: 10px 14px;
+      border-radius: 18px;
+      max-width: 70%;
+      word-wrap: break-word;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    .chat-messages .own {
+      align-self: flex-end;
+      background: #dcf8c6;
+      border-bottom-right-radius: 4px;
+    }
+    .chat-messages .other {
+      align-self: flex-start;
+      background: #fff;
+      border-bottom-left-radius: 4px;
+    }
+    .chat-input {
+      display: flex;
+      align-items: center;
+      padding: 8px;
+      background: #f0f0f0;
+      border-top: 1px solid #ddd;
+    }
+    .chat-input input {
+      border: none;
+      border-radius: 20px;
+      padding: 10px 15px;
+      flex: 1;
+      outline: none;
+      font-size: 14px;
+      background: #fff;
+      margin: 0 8px;
+    }
+    .chat-input button {
+      background: #0088cc;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 42px;
+      height: 42px;
+      cursor: pointer;
+      font-size: 18px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Левая колонка -->
+  <div class="sidebar">
+    <div class="sidebar-header">Чаты</div>
+    <ul id="chatList" class="chat-list">
+      <li class="active" data-chat="">Общий чат</li>
+    </ul>
+  </div>
+
+  <!-- Правая колонка -->
+  <div class="chat-container">
+    <div id="chatHeader" class="chat-header">💬 WebSocket Chat (Общий)</div>
+    <ul id="messages" class="chat-messages"></ul>
+    <div class="chat-input">
+      <input id="text" placeholder="Сообщение" onkeypress="if(event.key==='Enter') sendMessage()">
+      <button id="sendBtn" onclick="sendMessage()" disabled>➤</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let stompClient = null;
+  let currentUser = localStorage.getItem("username");
+  let messagesByUser = { "": [] }; // "" - общий чат
+  let currentChat = "";
+
+  function connect() {
+    let token = localStorage.getItem("jwtToken");
+    if(!token){ alert("Сначала войдите!"); return; }
+
+    let socket = new SockJS('/ws');
+    stompClient = Stomp.over(socket);
+
+    stompClient.connect({ Authorization: "Bearer " + token }, function(frame){
+      document.getElementById("sendBtn").disabled = false;
+      renderMessages("");
+
+      // Подписка
+      stompClient.subscribe('/topic/messages', function(message){
+        let msg = JSON.parse(message.body);
+        let chatKey = msg.to ? (msg.from === currentUser ? msg.to : msg.from) : "";
+        if(!messagesByUser[chatKey]) messagesByUser[chatKey] = [];
+        messagesByUser[chatKey].push(msg);
+
+        if(currentChat === chatKey) renderMessages(chatKey);
+      });
+
+      // Список пользователей
+      fetch("/users", { headers: { "Authorization": "Bearer " + token }})
+      .then(res => res.json())
+      .then(users => {
+        let chatList = document.getElementById("chatList");
+        chatList.innerHTML = '<li class="active" data-chat="">Общий чат</li>';
+        users.forEach(u=>{
+          if(u!==currentUser){
+            let li = document.createElement("li");
+            li.textContent = u;
+            li.dataset.chat = u;
+            li.onclick = () => selectChat(u);
+            chatList.appendChild(li);
+          }
+        });
+        document.querySelector("#chatList li").onclick = () => selectChat("");
+      });
+    });
+  }
+
+  function sendMessage(){
+    let text = document.getElementById("text").value.trim();
+    if(!text) return;
+    let payload = { text, to: currentChat || null };
+    stompClient.send(currentChat ? "/app/chat/private" : "/app/chat", {}, JSON.stringify(payload));
+    document.getElementById("text").value = "";
+  }
+
+  function renderMessages(chatKey){
+    let list = document.getElementById("messages");
+    list.innerHTML = "";
+    (messagesByUser[chatKey] || []).forEach(msg => showMessage(msg, chatKey));
+  }
+
+  function showMessage(msg, chatKey){
+    let li = document.createElement("li");
+    if(msg.from===currentUser){
+      li.textContent = msg.text;
+      li.classList.add("own");
+    } else {
+      li.textContent = (chatKey ? "" : msg.from+": ") + msg.text;
+      li.classList.add("other");
+    }
+    document.getElementById("messages").appendChild(li);
+    li.scrollIntoView({behavior:"smooth"});
+  }
+
+  function selectChat(chatKey){
+    currentChat = chatKey;
+    let chatHeader = document.getElementById("chatHeader");
+    chatHeader.textContent = chatKey ? "💬 Чат с "+chatKey : "💬 WebSocket Chat (Общий)";
+
+    // выделяем активный чат
+    document.querySelectorAll("#chatList li").forEach(li=>{
+      li.classList.toggle("active", li.dataset.chat===chatKey);
+    });
+
+    renderMessages(chatKey);
+  }
+
+  window.onload = connect;
+</script>
+</body>
+</html>
